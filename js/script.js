@@ -91,4 +91,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	setClock('.timer', deadline);
 
+	// Modal
+	const modalTrigger = document.querySelectorAll('[data-modal]'),
+		modal = document.querySelector('.modal'),
+		modalClose = document.querySelector('[data-close]');
+
+	function openModal() {
+		modal.classList.add('show');
+		document.body.style.overflow = 'hidden';
+		clearInterval(modalTimerID); // Отменяем таймер, если уже открыли окно
+	}
+
+	function closeModal() {
+		modal.classList.remove('show');
+		document.body.style.overflow = '';
+	}
+	// Если нажали на кнопку - показать модельное окно
+	modalTrigger.forEach((item, i) => {
+		modalTrigger[i].addEventListener('click', openModal)
+	});
+	// Если нажали закрыть - окно закроета
+	modalClose.addEventListener('click', closeModal);
+	// Если нажали на внешнюю область - окно закроется
+	modal.addEventListener('click', (e) => {
+		if (e.target === modal) {
+			closeModal();	
+		}
+	});
+	// Если нажали ESC - окно закроется
+	document.addEventListener('keydown', (e) => {
+		if (e.code === 'Escape' && modal.classList.contains('show')) {
+			closeModal();	
+		}
+	});
+	// Делаем таймер на появление окна
+	const modalTimerID = setTimeout(openModal, 3000);
+
+	function showModalByScroll() {
+		if (window.pageYOffset + document.documentElement.clientHeight >= document.documentElement.scrollHeight) {
+			openModal();
+			window.removeEventListener('scroll', showModalByScroll); // Если один раз появилось, то больше не будет
+		}
+	}
+	// Открывает окно, если пользователь долистал до конца страницы
+	window.addEventListener('scroll', showModalByScroll);
 });
