@@ -2,42 +2,44 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 	// Tabs
-	const tabs = document.querySelectorAll('.tabheader__item'),
-	tabsContent = document.querySelectorAll('.tabcontent'),
-	tabsParent = document.querySelector('.tabheader__items');
-	
-	function hideTabContent() {
-		tabsContent.forEach(item => {
+	const tabsItems = document.querySelectorAll('.tabheader__item');
+	const tabsImg = document.querySelectorAll('.tabcontent');
+	// Скрывает все изображения
+	tabsImg.forEach((item, i) => {
+		if (i > 0){
 			item.style.display = 'none';
-		});
-
-		tabs.forEach(item => {
-			item.classList.remove('tabheader__item_active');
-		});
-	}
-	function showTabContent(i = 0) {
-		tabsContent[i].style.display = 'block';
-		tabs[i].classList.add('tabheader__item_active');
-	}
-
-	hideTabContent();
-	showTabContent();
-
-	tabsParent.addEventListener('click', (event) => {
-		const target = event.target; // Чтобы каждый раз не прописывать event.target
-
-		if (target && target.classList.contains('tabheader__item')) {
-			tabs.forEach((item, i) => {
-				if (target == item) {
-					hideTabContent();
-					showTabContent(i);
-				}
-			});
 		}
 	});
 
-	//Timer
-	const deadline = '2021-01-10';
+	function hideImg() {
+		tabsImg.forEach((el) =>{
+			el.style.display = 'none';;
+		});
+	};
+
+	function hideTab() {
+		tabsItems.forEach((el) =>{
+			el.classList.remove('tabheader__item_active');
+		});
+	};
+	// Показывает нужный таб и img
+	tabsItems.forEach((item, i) => {
+		item.addEventListener('click', () => {
+			hideTab();
+			hideImg();
+			tabsImg[i].style.display = 'block';
+			item.classList.add('tabheader__item_active');
+		});
+	});
+
+	// Timer
+	const deadline = '2021-01-17';
+
+	const timer = document.querySelector('.timer'),
+		days = timer.querySelector('#days'),
+		hours = timer.querySelector('#hours'),
+		minutes = timer.querySelector('#minutes'),
+		seconds = timer.querySelector('#seconds');
 
 	function getTimeRemaining(endtime){
 		const t = Date.parse(endtime) - Date.parse(new Date()),
@@ -55,175 +57,240 @@ document.addEventListener('DOMContentLoaded', () => {
 			'seconds': seconds	
 		};
 	}
+	const getTime = getTimeRemaining(deadline);
 
-	function getZero(num) {
-		if (num >= 0 && num < 10) {
-			return `0${num}`;
+	function getZero(i){
+		if (i < 10 && i != 0){
+			return `0${i}`;
 		}
 		else {
-			return num;
+			return i;
 		}
+	};
+
+	function updateClock() {
+		const t = getTimeRemaining(deadline);
+		days.innerHTML = getZero(t.days);
+		hours.innerHTML = getZero(t.hours);
+		minutes.innerHTML = getZero(t.minutes);
+		seconds.innerHTML = getZero(t.seconds);
+	};
+
+	if (getTime.total > 0) { // Обновляем таймер, если он не дошел до 0
+		updateClock()
+		setInterval(updateClock, 1000);
 	}
-
-	function setClock(selector, endtime) {
-		const timer = document.querySelector(selector),
-			days = timer.querySelector('#days'),
-			hours = timer.querySelector('#hours'),
-			minutes = timer.querySelector('#minutes'),
-			seconds = timer.querySelector('#seconds'),
-			timeInterval = setInterval(updateClock, 1000);
-
-		updateClock();
-
-		function updateClock () {
-			const t = getTimeRemaining(endtime)
-
-			days.innerHTML = getZero(t.days);
-			hours.innerHTML = getZero(t.hours);
-			minutes.innerHTML = getZero(t.minutes);
-			seconds.innerHTML = getZero(t.seconds);
-
-			if (t.total <= 0) {
-				clearInterval(timeInterval);
-			}
-		}
-	}
-
-	setClock('.timer', deadline);
 
 	// Modal
 	const modalTrigger = document.querySelectorAll('[data-modal]'),
 		modal = document.querySelector('.modal'),
 		modalClose = document.querySelector('[data-close]');
 
-	function openModal() {
+	function showModal() {
 		modal.classList.add('show');
 		document.body.style.overflow = 'hidden';
-		clearInterval(modalTimerID); // Отменяем таймер, если уже открыли окно
+		clearInterval(modalTimer); // Отменяем таймер, если уже открыли окно
 	}
+	// Показываем окно, если кликнули по триггеру
+	modalTrigger.forEach((item) =>{
+		item.addEventListener('click', showModal)	
+	});
 
 	function closeModal() {
 		modal.classList.remove('show');
 		document.body.style.overflow = '';
-	}
-	// Если нажали на кнопку - показать модельное окно
-	modalTrigger.forEach((item, i) => {
-		modalTrigger[i].addEventListener('click', openModal)
-	});
-	// Если нажали закрыть - окно закроета
-	modalClose.addEventListener('click', closeModal);
+	};
+
+	modalClose.addEventListener('click', closeModal)
 	// Если нажали на внешнюю область - окно закроется
-	modal.addEventListener('click', (e) => {
-		if (e.target === modal) {
-			closeModal();	
+	modal.addEventListener('click', (e) =>{
+		if(e.target === modal){
+			closeModal()
 		}
 	});
-	// Если нажали ESC - окно закроется
+	// Если нажали escape - окно закроется
 	document.addEventListener('keydown', (e) => {
 		if (e.code === 'Escape' && modal.classList.contains('show')) {
 			closeModal();	
 		}
 	});
-	// Делаем таймер на появление окна
-	// const modalTimerID = setTimeout(openModal, 3000);
+	// Через 10с окно откроется
+	// const modalTimer = setTimeout(showModal, 10000);
 
 	function showModalByScroll() {
 		if (window.pageYOffset + document.documentElement.clientHeight >= document.documentElement.scrollHeight) {
-			openModal();
+			showModal();
 			window.removeEventListener('scroll', showModalByScroll); // Если один раз появилось, то больше не будет
 		}
 	}
+
 	// Открывает окно, если пользователь долистал до конца страницы
 	window.addEventListener('scroll', showModalByScroll);
 
-	//Menu card
-	class MenuCard {
-		constructor(src, alt, title, descr, price, parentSelector) {
-			this.src = src;
-			this.alt = alt;
-			this.title = title;
-			this.descr = descr;
-			this.price = price;
-			this.parent = document.querySelector(parentSelector);
-			this.transfer = 75;
-			this.changeToRUB();
-		}
+	// Menu card
+	// Копируем нужную карточку
+	const menuItem = document.querySelector('.menu__item').cloneNode(true),
+		contain = document.querySelector('[data-contain]');
+	// Вставляем код в скопированную карточку
+	menuItem.innerHTML=`<div class="menu__item">
+	<img src="img/tabs/vegy.jpg" alt="vegy">
+	<h3 class="menu__item-subtitle">Меню "Фитнес 2"</h3>
+	<div class="menu__item-descr">Меню "Фитнес 2" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!</div>
+	<div class="menu__item-divider"></div>
+	<div class="menu__item-price">
+		<div class="menu__item-cost">Цена:</div>
+		<div class="menu__item-total"><span>450</span> руб/день</div>
+	</div>
+	</div>`;
+	// Добавляем карточку на страницу
+	contain.appendChild(menuItem);
 
-		changeToRUB() {
-			this.price = this.price * this.transfer;
-		}
+	// SimpleSlider
 
-		render() {
-			const element = document.createElement('div');
-			element.innerHTML = `
-			<div class="menu__item">
-				<img src=${this.src} alt=${this.alt}>
-				<h3 class="menu__item-subtitle">${this.title}</h3>
-				<div class="menu__item-descr">${this.descr}</div>
-				<div class="menu__item-divider"></div>
-				<div class="menu__item-price">
-					<div class="menu__item-cost">Цена:</div>
-					<div class="menu__item-total"><span>${this.price}</span> руб/день</div>
-			</div>
-		</div>
-			`;
-			this.parent.append(element);
-		}
-	}
+	// const slides = document.querySelectorAll('.offer__slide'),
+	// 	total = document.querySelector('#total'),
+	// 	current = document.querySelector('#current'),
+	// 	next = document.querySelector('.offer__slider-next'),
+	// 	prev = document.querySelector('.offer__slider-prev');
 
-	new MenuCard(
-		'img/tabs/vegy.jpg',
-		'vegy',
-		'Меню "Фитнес"',
-		'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
-		100,
-		'.menu .container'
-	).render();
+	// total.innerHTML = `0${slides.length}`;
 
-	// Slider
+	// function showSlide(num) {
+	// 	slides.forEach((item) => {
+	// 			item.style.display = 'none';
+	// 	});
+	// 	current.innerHTML = `0${num + 1}`;
+	// 	slides[num].style.display = 'block'
+	// };
+
+	// let curr = 0;
+	// showSlide(curr)
+
+	// next.addEventListener('click', () => {
+	// 	if (curr < 3) {
+	// 		curr++;
+	// 		showSlide(curr);
+	// 	}
+	// 	else{
+	// 		curr = 0;
+	// 		showSlide(curr);
+	// 	}
+	// });
+
+	// prev.addEventListener('click', () => {
+	// 	if (curr > 0) {
+	// 		curr--;
+	// 		showSlide(curr);
+	// 	}
+	// 	else{
+	// 		curr = 3;
+	// 		showSlide(curr);
+	// 	}
+	// });
+
+	// SliderCarousel
+
 	const slides = document.querySelectorAll('.offer__slide'),
-		prev = document.querySelector('.offer__slider-prev'),
-		next = document.querySelector('.offer__slider-next'),
+		slider = document.querySelector('.offer__slider'),
 		total = document.querySelector('#total'),
-		current = document.querySelector('#current');
-	let slideIndex = 1;
-	console.log(prev);
+		current = document.querySelector('#current'),
+		next = document.querySelector('.offer__slider-next'),
+		prev = document.querySelector('.offer__slider-prev'),
+		slidesWrapper = document.querySelector('.offer__slider-wrapper'),
+		slidesField = document.querySelector('.offer__slider-inner'),
+		width = window.getComputedStyle(slidesWrapper).width;
 
-	showSlides(slideIndex);
+	let slideIndex = 0,
+		offset = 0;
 
-	if(slideIndex.length < 10) {
-		total.textContent = `0${slides.length}`;
-	}
-	else {
-		total.textContent = slides.length;
-	}
+	current.innerHTML = `0${slideIndex + 1}`;
+	total.innerHTML = `0${slides.length}`;
 
-	function showSlides(n) {
-		if(n > slides.length) { // Делает смену позиции слайдов
-			slideIndex = 1;
+	slidesField.style.width = 100 * slides.length + '%';
+	slidesField.style.display = 'flex';
+	slidesField.style.transition = '0.5s all';
+
+	slidesWrapper.style.overflow = 'hidden'; // Скрываем элементы, которые не попадают в область видимости
+
+	slides.forEach(slide => {
+		slide.style.width = width;
+	});
+
+	slider.style.position = 'relative';
+
+	const indicators = document.createElement('ol'),
+		dots = [];
+	indicators.classList.add('carousel-indicators');
+	slider.append(indicators);
+	// Получаем кол-во точек и добавляем их на страницу
+	for(let i = 0; i < slides.length; i++){ 
+		const dot = document.createElement('li');
+		dot.setAttribute('data-slide-to', i + 1);
+		dot.classList.add('dot');
+		if (i == 0) {
+			dot.style.opacity = 1;
 		}
-		if(n < 1) {
-			slideIndex = slides.length;
-		}
-		slides.forEach(item => item.style.display = 'none'); // Перебирает все слайды и скрывает их
-		slides[slideIndex -1].style.display = 'block'; // Показывает нужный слайд
+		indicators.append(dot);
+		dots.push(dot);
+	}
 
-		if(slides.length < 10) {
-			current.textContent = `0${slideIndex}`;
+	next.addEventListener('click', () => {
+		if(offset === +width.replace(/\D/g, '') * (slides.length - 1)) { // Если пролистали до конца, то возвращаем в начало
+			offset = 0;
 		}
 		else {
-			current.textContent = slideIndex;
+			offset += +width.replace(/\D/g, '')
 		}
-	}
+		slidesField.style.transform = `translateX(-${offset}px)`;
 
-	function plusSlides(n){
-		showSlides(slideIndex += n);
-	}
+		if (slideIndex < 3) {
+			slideIndex++;
+			current.innerHTML = `0${slideIndex + 1}`;
+		}
+		else {
+			slideIndex = 0;
+			current.innerHTML = `0${slideIndex + 1}`;
+		}
+
+		dots.forEach(dot => dot.style.opacity = '.5');
+		dots[slideIndex].style.opacity = 1;
+	});
 
 	prev.addEventListener('click', () => {
-		plusSlides(-1);
+		if(offset == 0) { // Если хотим пролистать в конец
+			offset = +width.replace(/\D/g, '') * (slides.length - 1);
+		}
+		else {
+			offset -= +width.replace(/\D/g, '')
+		}
+		slidesField.style.transform = `translateX(-${offset}px)`;
+
+		if (slideIndex > 0) {
+			slideIndex--;
+			current.innerHTML = `0${slideIndex + 1}`;
+		}
+		else {
+			slideIndex = 3;
+			current.innerHTML = `0${slideIndex + 1}`;
+		}
+
+		dots.forEach(dot => dot.style.opacity = '.5');
+		dots[slideIndex].style.opacity = 1;
 	});
-	next.addEventListener('click', () => {
-		plusSlides(1);
+
+	dots.forEach(dot =>{
+		dot.addEventListener('click', (e) => {
+			const slideTo = e.target.getAttribute('data-slide-to')
+
+			offset = +width.replace(/\D/g, '') * (slideTo - 1);
+
+			slidesField.style.transform = `translateX(-${offset}px)`;
+
+			dots.forEach(dot => dot.style.opacity = '.5');
+			dots[slideTo -1].style.opacity = 1;
+
+			current.innerHTML = `0${+slideTo}`;
+		});
 	});
+
 });
